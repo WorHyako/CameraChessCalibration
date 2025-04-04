@@ -30,7 +30,7 @@ namespace {
 	/**
 	 * @brief	Main window size.
 	 */
-	constexpr SDL_Point window_size{1200, 800};
+	constexpr SDL_Point window_size{1920, 1080};
 }
 
 auto MainWindow::create() noexcept -> Ptr {
@@ -125,6 +125,12 @@ auto MainWindow::window_handle() const noexcept -> SDL_Window* {
 
 auto MainWindow::renderer_handle() const noexcept -> SDL_Renderer* {
 	return renderer_.get();
+}
+
+auto MainWindow::size() const noexcept -> ImVec2 {
+	int height, width;
+	SDL_GetWindowSize(window_.get(), &height, &width);
+	return {static_cast<float>(height), static_cast<float>(width)};
 }
 
 #pragma endregion Accessors/Mutators

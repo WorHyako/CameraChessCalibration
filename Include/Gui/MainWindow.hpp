@@ -3,6 +3,8 @@
 #include <memory>
 #include <functional>
 
+#include "imgui.h"
+
 class SDL_Window;
 class SDL_Renderer;
 
@@ -98,6 +100,9 @@ namespace Wor::CCC::Gui {
 		 */
 		[[nodiscard]]
 		auto renderer_handle() const noexcept -> SDL_Renderer*;
+
+		[[nodiscard]]
+		auto size() const noexcept -> ImVec2;
 
 #pragma endregion Accessors/Mutators
 	};

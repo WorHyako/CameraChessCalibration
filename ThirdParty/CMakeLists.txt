@@ -42,3 +42,9 @@ target_sources(ImGui
 
 target_link_libraries(ImGui
         PUBLIC SDL3::SDL3)
+
+# -------------- #
+#   WorLibrary   #
+# -------------- #
+set(WORLIBRARY_WRAPPERS ON)
+add_subdirectory(WorLibrary)
