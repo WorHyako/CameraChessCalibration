@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Video/CornerFinder.hpp"
 #include "Video/CameraSettings.hpp"
 
 namespace Wor::CCC::Gui {
@@ -25,7 +26,13 @@ namespace Wor::CCC::Gui {
 	private:
 		bool camera_enabled_;
 
+		bool show_chessboard_pattern_;
+
+		Video::ChessboardPattern::Alias chessboard_position_;
+
 		std::int32_t camera_index_;
+
+		std::array<int, 2> corner_num_;
 
 		// Video::CameraSettings camera_settings_;
 
@@ -38,6 +45,30 @@ namespace Wor::CCC::Gui {
 		 * @param	camera_settings
 		 */
 		auto init(Video::CameraSettings camera_settings) -> void;
+
+		/**
+		 * @brief
+		 *
+		 * @return
+		 */
+		[[nodiscard]]
+		auto corner_num() const noexcept -> cv::Size;
+
+		/**
+		 * @brief
+		 *
+		 * @return
+		 */
+		[[nodiscard]]
+		auto chessboard_position() const noexcept -> Video::ChessboardPattern::Alias;
+
+		/**
+		 * @brief
+		 *
+		 * @return
+		 */
+		[[nodiscard]]
+		auto is_show_chessboard_pattern() const noexcept -> bool;
 
 #pragma endregion Accessors/Mutators
 	};

@@ -10,11 +10,18 @@ using namespace Wor::CCC::Gui;
 
 CameraSettingsWidget::CameraSettingsWidget()
 	: camera_enabled_{false},
-	  camera_index_{0} {
+	  show_chessboard_pattern_{false},
+	  chessboard_position_{Video::ChessboardPattern::Alias::Center},
+	  camera_index_{0},
+	  corner_num_{8, 6} {
 }
 
 auto CameraSettingsWidget::draw() -> void {
-	ImGui::Begin("Camera Settings");
+	ImGui::Begin("Settings");
+
+	ImGui::BeginTable("Settings", 2);
+	ImGui::TableNextRow();
+	ImGui::TableSetColumnIndex(0);
 
 	auto& video_stream{Wrappers::Singleton<Video::VideoStream>::get()};
 
@@ -32,7 +39,7 @@ auto CameraSettingsWidget::draw() -> void {
 
 	ImGui::BeginDisabled(camera_enabled_ == false);
 
-	auto& capture_handle = video_stream.capture_handle();
+	auto& capture_handle{video_stream.capture_handle()};
 
 	static std::int32_t fps{0};
 	static std::int32_t frame_width{0};
@@ -69,6 +76,28 @@ auto CameraSettingsWidget::draw() -> void {
 	}
 
 	ImGui::EndDisabled();
+
+	ImGui::TableSetColumnIndex(1);
+
+	ImGui::Checkbox("Show chessboard pattern", &show_chessboard_pattern_);
+	ImGui::BeginDisabled((show_chessboard_pattern_ && camera_enabled_) == false);
+	ImGui::InputInt2("Corners num", corner_num_.data());
+
+	static int state{0};
+	if (ImGui::BeginTable("Chessboard position alias table", 3)) {
+		for (int i{0}; i < 9; i++) {
+			ImGui::TableNextColumn();
+			ImGui::PushID(i);
+			if (ImGui::RadioButton("", &state, i)) {
+				chessboard_position_ = static_cast<Video::ChessboardPattern::Alias>(i);
+			}
+			ImGui::PopID();
+		}
+		ImGui::EndTable();
+	}
+	ImGui::EndTable();
+	ImGui::EndDisabled();
+
 	ImGui::End();
 }
 
@@ -76,6 +105,18 @@ auto CameraSettingsWidget::draw() -> void {
 
 auto CameraSettingsWidget::init(Video::CameraSettings camera_settings) -> void {
 	// camera_settings_ = std::move(camera_settings);
+}
+
+auto CameraSettingsWidget::corner_num() const noexcept -> cv::Size {
+	return {corner_num_.at(0), corner_num_.at(1)};
+}
+
+auto CameraSettingsWidget::chessboard_position() const noexcept -> Video::ChessboardPattern::Alias {
+	return chessboard_position_;
+}
+
+auto CameraSettingsWidget::is_show_chessboard_pattern() const noexcept -> bool {
+	return show_chessboard_pattern_;
 }
 
 #pragma endregion Accessors/Mutators

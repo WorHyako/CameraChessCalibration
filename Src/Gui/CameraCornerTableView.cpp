@@ -1,6 +1,6 @@
 #include "Gui/CameraCornerTableView.hpp"
 
-#include <opencv2/videoio.hpp>
+#include <opencv2/core/mat.hpp>
 
 #include <SDL3/SDL_render.h>
 
@@ -27,8 +27,13 @@ auto CameraCornerTableView::draw() noexcept -> void {
 					}
 
 					ImGui::TableSetColumnIndex(column);
-					auto texture{sdl_textures_.at(index)};
-					ImGui::Image(reinterpret_cast<ImU64>(texture), ImGui::GetWindowSize());
+					if (ImGui::ImageButton("",
+										   reinterpret_cast<ImU64>(sdl_textures_.at(index)),
+										   {
+											   ImGui::GetWindowSize().x / table_length,
+											   ImGui::GetWindowSize().y / table_length
+										   })) {
+					}
 				}
 			}
 			ImGui::EndTable();

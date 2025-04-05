@@ -38,15 +38,16 @@ namespace {
 	auto convert = [](const cv::Mat& input, SDL_Texture* output)-> SDL_Texture* {
 		const Uint8* pixel_data{input.data};
 
-		std::uint32_t pitch{static_cast<std::uint32_t>(input.step1())};
+		const std::uint32_t pitch{static_cast<std::uint32_t>(input.step1())};
 		void* gray_pixels;
 		int gray_pitch;
+
 		SDL_LockTexture(output, nullptr, &gray_pixels, &gray_pitch);
 		Uint8* gray_pixel_data{static_cast<Uint8*>(gray_pixels)};
 
-		for (std::size_t y = 0; y < input.rows; ++y) {
-			for (std::size_t x = 0; x < input.cols; ++x) {
-				Uint8 pixel{pixel_data[y * pitch + x]};
+		for (std::size_t y{0}; y < input.rows; ++y) {
+			for (std::size_t x{0}; x < input.cols; ++x) {
+				const Uint8 pixel{pixel_data[y * pitch + x]};
 
 				const std::size_t dest_index{y * gray_pitch + x * 3};
 				gray_pixel_data[dest_index] = pixel;
@@ -104,12 +105,13 @@ int main() {
 
 		main_window->new_frame();
 
-		const cv::Mat stream_cv_texture{video_stream.frame()};
+		const cv::Mat clear_cv_texture{video_stream.frame()};
 
 		auto find_corners_task{
 					std::async(std::launch::async,
 							   Video::CornerFinder::find,
-							   stream_cv_texture)
+							   clear_cv_texture,
+							   camera_settings_window.corner_num())
 				};
 
 		const auto main_window_size{main_window->size()};
@@ -121,6 +123,15 @@ int main() {
 		 */
 		ImGui::SetNextWindowPos({0.0f, 0.0f});
 		ImGui::SetNextWindowSize(camera_window_size);
+		cv::Mat stream_cv_texture{clear_cv_texture.clone()};
+
+		Video::ChessboardPattern chessboard_pattern{{stream_cv_texture.cols, stream_cv_texture.rows}};
+		if (camera_settings_window.is_show_chessboard_pattern()) {
+			cv::Rect chessboard_rect{
+						chessboard_pattern.get_chessboard_rect(camera_settings_window.chessboard_position())
+					};
+			cv::rectangle(stream_cv_texture, chessboard_rect, cv::Scalar(0, 200, 0));
+		}
 		stream_camera_view.draw(stream_cv_texture);
 
 		/**
@@ -148,17 +159,21 @@ int main() {
 
 		std::vector corners{find_corners_task.get()};
 		if (corners.empty() == false) {
-			cv::Mat corner_cv_texture{stream_cv_texture.clone()};
+			cv::Mat corner_cv_texture{clear_cv_texture.clone()};
 
-			for (const auto& corner : corners) {
-				cv::circle(corner_cv_texture,
-						   corner,
-						   5,
-						   cv::Scalar(0, (255 - 5 * std::size(corners)) * 2, 255),
-						   cv::FILLED);
+			cv::Rect2i rect(corners.front(), corners.back());
+			if (chessboard_pattern.corresponds_to(rect, camera_settings_window.chessboard_position())) {
+				for (std::size_t i{0}; i < std::size(corners); ++i) {
+					auto index_percent{static_cast<float>(i) / static_cast<float>(std::size(corners))};
+					cv::circle(corner_cv_texture,
+							   corners[i],
+							   5,
+							   cv::Scalar(50, 0 + 255 * index_percent, 255 - 255 * index_percent),
+							   2,
+							   cv::FILLED);
+				}
+				corner_table_view.push_texture(corner_cv_texture);
 			}
-
-			corner_table_view.push_texture(corner_cv_texture);
 		}
 	}
 	SDL_Quit();
